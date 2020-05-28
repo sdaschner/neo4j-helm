@@ -18,7 +18,7 @@ metadata:
     app.kubernetes.io/component: core
 spec:
   publishNotReadyAddresses: true
-  type: LoadBalancer
+  type: ClusterIP
   ports:
     - name: discovery
       port: 5000
@@ -52,4 +52,4 @@ spec:
 {{- end }}
   selector:
     statefulset.kubernetes.io/pod-name: "{{ template "neo4j.fullname" $dot }}-core-{{ . }}"
-{{- end }}    
+{{- end }}
