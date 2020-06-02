@@ -20,10 +20,6 @@ spec:
     env:
       - name: NAME
         value: "{{ .Release.Name }}"
-      - name: CORES
-        value: "{{ .Values.core.numberOfServers }}"
-      - name: READ_REPLICAS
-        value: "{{ .Values.readReplica.numberOfServers }}"
       - name: NAMESPACE
         value: "{{ .Release.Namespace }}"
       - name: PORT_HTTP

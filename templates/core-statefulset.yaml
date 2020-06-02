@@ -5,7 +5,7 @@ metadata:
 spec:
   podManagementPolicy: Parallel
   serviceName: {{ template "neo4j.fullname" . }}
-  replicas: {{ .Values.core.numberOfServers }}
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/instance: {{ .Release.Name | quote }}
@@ -20,7 +20,6 @@ spec:
         app.kubernetes.io/name: {{ template "neo4j.name" . }}
         app.kubernetes.io/component: core
     spec:
-      serviceAccountName: "{{ template "neo4j.fullname" . }}-sa"
       containers:
       - name: {{ template "neo4j.fullname" . }}
         image: "{{ .Values.image }}:{{ .Values.imageTag }}"
@@ -29,12 +28,6 @@ spec:
         envFrom:
           - configMapRef:
               name: {{ template "neo4j.commonConfig.fullname" . }}
-          - configMapRef:
-              {{- if .Values.core.configMap }}
-              name: "{{ .Values.core.configMap }}"
-              {{- else }}
-              name: {{ template "neo4j.coreConfig.fullname" . }}
-              {{- end }}
         env:
           {{- if .Values.authEnabled }}
           - name: NEO4J_SECRETS_PASSWORD
@@ -47,19 +40,10 @@ spec:
           - "/bin/bash"
           - "-c"
           - |
-            export core_idx=$(hostname | sed 's|.*-||')
-
             # Processes key configuration elements and exports env vars we need.
             . /helm-init/init.sh
 
-            # We advertise the discovery-lb addresses (see discovery-lb.yaml) because
-            # it is for internal cluster comms and is limited to private ports.
-            export DISCOVERY_HOST="discovery-{{ template "neo4j.fullname" . }}-${core_idx}.{{ .Release.Namespace }}.svc.cluster.local"
-            export NEO4J_causal__clustering_discovery__advertised__address="$DISCOVERY_HOST:5000"
-            export NEO4J_causal__clustering_transaction__advertised__address="$DISCOVERY_HOST:6000"
-            export NEO4J_causal__clustering_raft__advertised__address="$DISCOVERY_HOST:7000"
-
-            echo "Starting Neo4j CORE $core_idx on $HOST"
+            echo "Starting Neo4j CORE"
             exec /docker-entrypoint.sh "neo4j"
         ports:
         - containerPort: 5000
